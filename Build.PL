@@ -11,12 +11,14 @@ my $build = Module::Build->new(
     },
     test_requires => {
         'Test::More' => 0,
+        'Test::SetupTeardown' => 0,
     },
     requires => {
         'perl' => '5.10.1',
         'autodie' => 0,
         'Carp' => 0,
         'Data::UUID' => 0,
+        'HTTP::Date' => 0,
         'HTTP::Request' => 0,
         'JSON' => 0,
         'List::Util' => 0,
