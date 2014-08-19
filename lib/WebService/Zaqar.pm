@@ -90,3 +90,151 @@ sub AUTOLOAD {
 }
 
 1;
+__END__
+=pod
+
+=head1 NAME
+
+WebService::Zaqar -- Wrapper around the Zaqar (aka Marconi) message queue API
+
+=head1 SYNOPSIS
+
+  use WebService::Zaqar;
+  my $client = WebService::Zaqar->new(
+      # base_url => 'https://dfw.queues.api.rackspacecloud.com/',
+      base_url => 'http://localhost:8888',
+      spore_description_file => 'share/marconi.spore.json');
+  
+  # for Rackspace only
+  my $token = $client->rackspace_authenticate('https://identity.api.rackspacecloud.com/v2.0/tokens',
+                                              $rackspace_account,
+                                              $rackspace_key);
+  
+  $client->create_queue(queue_name => 'pets');
+  $client->post_messages(queue_name => 'pets',
+                         payload => [
+                             { ttl => 120,
+                               body => [ 'pony', 'horse', 'warhorse' ] },
+                             { ttl => 120,
+                               body => [ 'little dog', 'dog', 'large dog' ] } ]);
+  $client->post_messages(queue_name => 'pets',
+                         payload => [
+                             { ttl => 120,
+                               body => [ 'aleax', 'archon', 'ki-rin' ] } ]);
+
+=head1 DESCRIPTION
+
+This library is a L<Net::HTTP::Spore>-based client for the message
+queue component of OpenStack,
+L<Zaqar|https://wiki.openstack.org/wiki/Marconi/specs/api/v1>
+(previously known as "Marconi").
+
+It is a straightforward client without bells and whistles.  The only
+extra is the support of Rackspace authentication using their L<Cloud
+Identity|http://docs.rackspace.com/queues/api/v1.0/cq-gettingstarted/content/Generating_Auth_Token.html>
+token system.
+
+=head1 ATTRIBUTES
+
+=head2 base_url
+
+(read-only string)
+
+The base URL for all API queries, except for the Rackspace-specific
+authentication.
+
+=head2 client_uuid
+
+(read-only string, defaults to a new UUID)
+
+All API queries B<should> contain a "Client-ID" header (in practice,
+some appear to work without this header).  If you do not provide a
+value, a new one will be built with L<Data::UUID>.
+
+The docs recommend reusing the same client UUID between restarts of
+the client.
+
+=head2 spore_client
+
+(read-only object)
+
+This is the L<Net::HTTP::Spore> client build with the
+C<spore_description_file> attribute.  All API method calls will be
+delegated to this object.
+
+=head2 spore_description_file
+
+(read-only required file path or URL)
+
+Path to the SPORE specification file or remote resource.
+
+A spec file for Zaqar v1.0 is provided in the distribution (see
+F<share/marconi.spec.json>).
+
+=head2 token
+
+(read-only string with default predicate)
+
+The token is automatically set when calling C<rackspace_authenticate>
+successfully.  Once set, it will be sent in the "X-Auth-Token" header
+with each query.
+
+Rackspace invalidates the token after 24h, at which point all the
+queries will start returning 403 Forbidden.  Consider using a module
+such as L<Action::Retry> to re-authenticate.
+
+=head1 METHODS
+
+=head2 DELEGATED METHODS
+
+All methods listed in L<the API
+docs|https://wiki.openstack.org/wiki/Marconi/specs/api/v1> are
+implemented by the SPORE client.  When a body is required, you must
+provide it via the C<payload> parameter.
+
+See also the F<share/marconi.spore.json> file for details.
+
+All those methods can be called with an instance of
+L<WebService::Zaqar> as invocant; they will be delegated to the SPORE
+client.
+
+=head2 rackspace_authenticate
+
+  my $token = $client->rackspace_authenticate('https://identity.api.rackspacecloud.com/v2.0/tokens',
+                                              $rackspace_account,
+                                              $rackspace_key);
+
+Sends an HTTP request to a L<Cloud
+Identity|http://docs.rackspace.com/queues/api/v1.0/cq-gettingstarted/content/Generating_Auth_Token.html>
+endpoint (or compatible) and sets the token received.
+
+See also L</token>.
+
+=head1 SEE ALSO
+
+L<Net::HTTP::Spore>
+
+=head1 AUTHOR
+
+Fabrice Gabolde <fgabolde@weborama.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2014 Weborama
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301, USA.
+
+=cut
