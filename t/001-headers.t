@@ -17,18 +17,30 @@ use HTTP::Date;
 use WebService::Zaqar;
 
 my $requests;
+my $mock_server = {
+    '/v1/health' => sub {
+        my $req = shift;
+        $req->new_response(200, [], '{"ok": "ok"}');
+    },
+    '/v1/queues/chirimoya/claims' => sub {
+        my $req = shift;
+        $req->new_response(200, [], '{"ok": "ok"}');
+    },
+};
 
 my $environment = Test::SetupTeardown->new(setup => sub { @{$requests} = () });
 
 $environment->run_test('query with no payload', sub {
 
-    my $client = WebService::Zaqar->new(base_url => 'http://192.0.2.2/base/v1',
+    my $client = WebService::Zaqar->new(base_url => 'http://localhost',
                                         spore_description_file => 'share/marconi.spore.json',
                                         client_uuid => 'tomato');
     $client->spore_client->enable('DumpToScalar',
                                   dump_log => $requests);
+    $client->spore_client->enable('Mock',
+                                  tests => $mock_server);
 
-    eval { $client->check_node_health };
+    $client->check_node_health;
 
     my $request = shift @{$requests};
 
@@ -47,16 +59,18 @@ $environment->run_test('query with no payload', sub {
 
 $environment->run_test('query with payload', sub {
 
-    my $client = WebService::Zaqar->new(base_url => 'http://192.0.2.2/base/v1',
+    my $client = WebService::Zaqar->new(base_url => 'http://localhost',
                                         spore_description_file => 'share/marconi.spore.json',
                                         client_uuid => 'tomato');
     $client->spore_client->enable('DumpToScalar',
                                   dump_log => $requests);
+    $client->spore_client->enable('Mock',
+                                  tests => $mock_server);
 
-    eval { $client->claim_messages(queue_name => 'chirimoya',
-                                   limit => 5,
-                                   payload => { ttl => 60,
-                                                grace => 60 } ) };
+    $client->claim_messages(queue_name => 'chirimoya',
+                            limit => 5,
+                            payload => { ttl => 60,
+                                         grace => 60 } );
 
     my $request = shift @{$requests};
 
@@ -75,17 +89,19 @@ $environment->run_test('query with payload', sub {
 
 $environment->run_test('query with payload and token', sub {
 
-    my $client = WebService::Zaqar->new(base_url => 'http://192.0.2.2/base/v1',
+    my $client = WebService::Zaqar->new(base_url => 'http://localhost',
                                         spore_description_file => 'share/marconi.spore.json',
                                         client_uuid => 'tomato',
                                         token => 'potato');
     $client->spore_client->enable('DumpToScalar',
                                   dump_log => $requests);
+    $client->spore_client->enable('Mock',
+                                  tests => $mock_server);
 
-    eval { $client->claim_messages(queue_name => 'chirimoya',
-                                   limit => 5,
-                                   payload => { ttl => 60,
-                                                grace => 60 } ) };
+    $client->claim_messages(queue_name => 'chirimoya',
+                            limit => 5,
+                            payload => { ttl => 60,
+                                         grace => 60 } );
 
     my $request = shift @{$requests};
 
