@@ -14,6 +14,8 @@ use Net::HTTP::Spore;
 use List::Util qw/first/;
 use Data::UUID;
 
+our $VERSION = '0.001';
+
 has 'base_url' => (is => 'ro',
                    writer => '_set_base_url');
 has 'token' => (is => 'ro',
