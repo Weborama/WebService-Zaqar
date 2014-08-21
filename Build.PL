@@ -29,6 +29,7 @@ my $build = Module::Build->new(
         'warnings' => 0,
     },
     add_to_cleanup => [ 'WebService-Zaqar-*' ],
+    share_dir => 'share',
     meta_merge => {
         resources => {
             repository => 'https://github.com/Weborama/WebService-Zaqar.git',
