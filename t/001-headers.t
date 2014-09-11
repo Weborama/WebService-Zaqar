@@ -20,7 +20,7 @@ my $requests;
 my $mock_server = {
     '/v1/health' => sub {
         my $req = shift;
-        $req->new_response(200, [], '{"ok": "ok"}');
+        $req->new_response(204, [], '');
     },
     '/v1/queues/chirimoya/claims' => sub {
         my $req = shift;

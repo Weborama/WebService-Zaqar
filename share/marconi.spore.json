@@ -3,7 +3,8 @@
       "check_node_health" : {
          "authentication" : 1,
          "method" : "HEAD",
-         "path" : "/v1/health"
+         "path" : "/v1/health",
+         "expected_status" : [ 204, 503 ]
       },
       "claim_messages" : {
          "authentication" : 1,
@@ -70,7 +71,8 @@
       "get_node_health" : {
          "authentication" : 1,
          "method" : "GET",
-         "path" : "/v1/health"
+         "path" : "/v1/health",
+         "expected_status" : [ 204, 503 ]
       },
       "get_queue_metadata" : {
          "authentication" : 1,
