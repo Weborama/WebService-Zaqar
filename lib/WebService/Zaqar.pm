@@ -59,7 +59,7 @@ sub _build_spore_client {
     $client->enable('Header',
                     header_name => 'Client-ID',
                     header_value => $self->client_uuid);
-    $client->enable('FollowableLinks');
+    $client->enable('JustCallIt');
     return $client;
 }
 

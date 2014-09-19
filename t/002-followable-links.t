@@ -51,11 +51,14 @@ $environment->run_test('follow links', sub {
                                   tests => $mock_server);
     my $response = $client->list_queues(limit => 10);
     shift @{$requests};
-    my $followup = $response->parameters_for_following_link("next");
-    is_deeply({ @{$followup} }, { limit => 15, marker => 'kooleo' },
-              q{... and having a rel: "next" link allows us to generate a followup request});
-    ok($client->list_queues(limit => 10, @{$followup}),
+
+    my %links = map { $_->{rel} => $_ } @{$response->body->{links}};
+    my $href = $links{'next'}->{href};
+    ok($client->list_queues(__url__ => $href),
        q{... and that request is valid});
+    my $request = shift @{$requests};
+    is($request->uri->rel($client->base_url)->as_string, 'v1/queues?marker=kooleo&limit=15',
+       q{... and the request was made to the right URL});
                        });
 
 done_testing;
