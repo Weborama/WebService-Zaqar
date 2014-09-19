@@ -133,8 +133,8 @@ queue component of OpenStack,
 L<Zaqar|https://wiki.openstack.org/wiki/Marconi/specs/api/v1>
 (previously known as "Marconi").
 
-It is a straightforward client without bells and whistles.  The only
-extra is the support of Rackspace authentication using their L<Cloud
+On top of allowing you to make requests to a Zaqar endpoint, this
+library also supports Rackspace authentication using their L<Cloud
 Identity|http://docs.rackspace.com/queues/api/v1.0/cq-gettingstarted/content/Generating_Auth_Token.html>
 token system.
 
@@ -196,11 +196,24 @@ docs|https://wiki.openstack.org/wiki/Marconi/specs/api/v1> are
 implemented by the SPORE client.  When a body is required, you must
 provide it via the C<payload> parameter.
 
-See also the F<share/marconi.spore.json> file for details.
+See the F<share/marconi.spore.json> file for the list of methods and
+their parameters.
 
 All those methods can be called with an instance of
 L<WebService::Zaqar> as invocant; they will be delegated to the SPORE
 client.
+
+Unlike "regular" SPORE-based clients, you may use the special
+C<__url__> parameter to provide an already-built URL directly.  This
+is helpful when trying to follow links provided by the API itself.
+E.g. when you make a claim on a queue, the server does not return the
+claim and message IDs; instead it returns URLs to the claim and
+messages, which you are then supposed to call if you want to release
+or update the claim, delete a message, etc.
+
+  my $response = $client->claim_messages(queue_name => 'potato');
+  my $claim_href = $response->header('Location');
+  $client->release_claim(__url__ => $claim_href);
 
 =head2 rackspace_authenticate
 
@@ -213,6 +226,40 @@ Identity|http://docs.rackspace.com/queues/api/v1.0/cq-gettingstarted/content/Gen
 endpoint (or compatible) and sets the token received.
 
 See also L</token>.
+
+=head1 SPORE MIDDLEWARES ENABLED
+
+The following modifications are applied to requests before they are
+made, in order:
+
+=over 4
+
+=item serializing the body to JSON
+
+=item setting the C<X-Auth-Token> header to the authentication token,
+if available
+
+=item setting the C<Date> header to the current date in RFC 1123
+format
+
+=item setting the C<Client-ID> header to the value of the
+C<client_uuid> attribute
+
+=item if the C<__url__> parameter is provided to the method call,
+replace the request path and querystring params with its value
+
+=back
+
+The following modifications are applied to responses before they are
+returned, in order:
+
+=over 4
+
+=item deserializing the body from JSON, except for 401 and 403
+responses, which are likely to come from Keystone instead and are
+plain text.
+
+=back
 
 =head1 SEE ALSO
 
