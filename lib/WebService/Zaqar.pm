@@ -39,8 +39,9 @@ sub _build_spore_client {
     my $self = shift;
     my $client = Net::HTTP::Spore->new_from_spec($self->spore_description_file,
                                                  base_url => $self->base_url);
-    # all payloads serialized/deserialized to/from JSON
-    $client->enable('Format::JSON');
+    # all payloads serialized/deserialized to/from JSON -- except if
+    # you're receiving 401 or 403
+    $client->enable('Format::JSONSometimes');
     # set X-Auth-Token header to the Cloud Identity token, if
     # available (local instances don't use that, for instance)
     $client->enable('Auth::DynamicHeader',
