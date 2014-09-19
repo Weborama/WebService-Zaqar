@@ -48,7 +48,8 @@
       "exists_queue" : {
          "authentication" : 1,
          "method" : "HEAD",
-         "path" : "/v1/queues/:queue_name"
+         "path" : "/v1/queues/:queue_name",
+         "expected_status": [ 204, 404 ]
       },
       "get_claim" : {
          "authentication" : 1,
