@@ -1,15 +1,19 @@
 Revision history for WebService::Zaqar
 
-0.003 2014-09-26 15:50:21+02:00 Internal
+0.004 2014-09-26
+
+ - Document new stuff from 0.003
+
+0.003 2014-09-26 Internal
 
  - Steal do_request auth stuff from both (internal) users of this
    module
 
-0.002 2014-09-19 11:41:08+02:00 Internal
+0.002 2014-09-19 Internal
 
  - Helpers for following links provided by the server
  - Tests and bugfixes
 
-0.001 2014-08-19 15:56:05+02:00 Internal
+0.001 2014-08-19 Internal
 
  - Initial release
