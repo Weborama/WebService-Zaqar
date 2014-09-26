@@ -1,5 +1,10 @@
 Revision history for WebService::Zaqar
 
+0.006 2014-09-26
+
+ - Middlewares now live in their own namespace (and Header middleware
+   is now an external dependency)
+
 0.005 2014-09-26
 
  - Fix deps, remove obsolete module
