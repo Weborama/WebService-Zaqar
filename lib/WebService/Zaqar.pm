@@ -12,7 +12,9 @@ use HTTP::Request;
 use JSON;
 use Net::HTTP::Spore;
 use List::Util qw/first/;
+use Scalar::Util qw/blessed/;
 use Data::UUID;
+use Try::Tiny;
 
 our $VERSION = '0.002';
 
@@ -30,6 +32,15 @@ has 'spore_description_file' => (is => 'ro',
 has 'client_uuid' => (is => 'ro',
                       lazy => 1,
                       builder => '_build_uuid');
+
+has 'wants_auth' => (is => 'ro',
+                     default => sub { 0 });
+has 'rackspace_keystone_endpoint' => (is => 'ro',
+                                      predicate => 1);
+has 'rackspace_username' => (is => 'ro',
+                             predicate => 1);
+has 'rackspace_api_key' => (is => 'ro',
+                            predicate => 1);
 
 sub _build_uuid {
     return Data::UUID->new->create_str;
@@ -63,6 +74,51 @@ sub _build_spore_client {
     return $client;
 }
 
+sub do_request {
+    my ($self, $coderef, $options, @rest) = @_;
+    # here undef retries means retry until it works, 0 retries means
+    # don't retry, other integers mean retry that many times
+    my $max_retries = $options->{retries};
+    my $current_retries = 0;
+    RETRY: {
+        my $return_value;
+        try {
+            $return_value = $coderef->($self, @rest);
+        } catch {
+            my $exception = $_;
+            if (blessed($exception)
+                and $exception->isa('Net::HTTP::Spore::Response')) {
+                if ($exception->code == 401) {
+                    if (defined $max_retries and $current_retries >= $max_retries) {
+                        croak('Server returned 401 Unauthorized but we already retried too many times');
+                    }
+                    $current_retries++;
+                    # re-authentication needed
+                    if ($self->wants_auth) {
+                        $self->rackspace_authenticate(
+                            $self->rackspace_keystone_endpoint,
+                            $self->rackspace_username,
+                            $self->rackspace_api_key);
+                       goto RETRY;
+                    } else {
+                        # ... but not wanted!
+                        croak('Server returned 401 Unauthorized but we are not planning on authenticating!');
+                    }
+                }
+                # rethrow the contents of the exception instead of just
+                # the unhelpful HTTP 400
+                if ($exception->code == 599) {
+                    croak($exception->body->{error});
+                }
+                croak $exception;
+            }
+            # wasn't a Spore exception, rethrow
+            croak $exception;
+        };
+        return $return_value;
+    }
+}
+
 sub rackspace_authenticate {
     my ($self, $cloud_identity_uri, $username, $apikey) = @_;
     my $request = HTTP::Request->new('POST', $cloud_identity_uri,
@@ -82,6 +138,25 @@ sub rackspace_authenticate {
     # my $catalog = first { $_->{name} eq 'cloudQueues'
     #                           and $_->{type} eq 'rax:queues' } @{$structure->{serviceCatalog}};
     return $token;
+}
+
+sub BUILD {
+    my $self = shift;
+    if ($self->wants_auth
+        and (not $self->has_rackspace_keystone_endpoint
+             or not $self->has_rackspace_username
+             or not $self->has_rackspace_api_key)) {
+        croak('Authentication required but not all Rackspace attributes provided');
+    }
+    # if ($self->has_rackspace_username) {
+    #     # uhhh, ok, so SOME Rackspace docs say this header is
+    #     # necessary, but others don't mention it; when I add it to a
+    #     # request it always 403s and without it it seems to work, so
+    #     # uh, yeah.
+    #     $self->spore_client->enable('Header',
+    #                                 header_name => 'X-Project-Id',
+    #                                 header_value => '921182');
+    # }
 }
 
 our $AUTOLOAD;
