@@ -52,10 +52,10 @@ sub _build_spore_client {
                                                  base_url => $self->base_url);
     # all payloads serialized/deserialized to/from JSON -- except if
     # you're receiving 401 or 403
-    $client->enable('Format::JSONSometimes');
+    $client->enable('+WebService::Zaqar::Middleware::Format::JSONSometimes');
     # set X-Auth-Token header to the Cloud Identity token, if
     # available (local instances don't use that, for instance)
-    $client->enable('Auth::DynamicHeader',
+    $client->enable('+WebService::Zaqar::Middleware::Auth::DynamicHeader',
                     header_name => 'X-Auth-Token',
                     header_value_callback => sub {
                         # HTTP::Headers says, if the value of the
@@ -63,14 +63,14 @@ sub _build_spore_client {
                         return $self->has_token ? $self->token : undef
                     });
     # all requests should contain a Date header with an RFC 1123 date
-    $client->enable('DateHeader');
+    $client->enable('+WebService::Zaqar::Middleware::DateHeader');
     # each client using the queue should provide an UUID; the docs
     # recommend that for a given client it should persist between
     # restarts
     $client->enable('Header',
                     header_name => 'Client-ID',
                     header_value => $self->client_uuid);
-    $client->enable('JustCallIt');
+    $client->enable('+WebService::Zaqar::Middleware::JustCallIt');
     return $client;
 }
 

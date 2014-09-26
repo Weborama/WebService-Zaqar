@@ -1,4 +1,4 @@
-package Net::HTTP::Spore::Middleware::DateHeader;
+package WebService::Zaqar::Middleware::DateHeader;
 
 # ABSTRACT: middleware for adding a Date header to all requests
 

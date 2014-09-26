@@ -1,4 +1,4 @@
-package Net::HTTP::Spore::Middleware::Auth::DynamicHeader;
+package WebService::Zaqar::Middleware::Auth::DynamicHeader;
 
 # ABSTRACT: middleware for adding a dynamic authentication header value
 

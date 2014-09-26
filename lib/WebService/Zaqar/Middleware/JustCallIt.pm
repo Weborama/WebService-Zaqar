@@ -1,4 +1,4 @@
-package Net::HTTP::Spore::Middleware::JustCallIt;
+package WebService::Zaqar::Middleware::JustCallIt;
 
 # ABSTRACT: middleware to follow hrefs provided by the user
 
