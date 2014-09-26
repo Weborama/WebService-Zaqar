@@ -211,7 +211,7 @@ L<Zaqar|https://wiki.openstack.org/wiki/Marconi/specs/api/v1>
 On top of allowing you to make requests to a Zaqar endpoint, this
 library also supports Rackspace authentication using their L<Cloud
 Identity|http://docs.rackspace.com/queues/api/v1.0/cq-gettingstarted/content/Generating_Auth_Token.html>
-token system.
+token system; see C<do_request>.
 
 =head1 ATTRIBUTES
 
@@ -232,6 +232,24 @@ value, a new one will be built with L<Data::UUID>.
 
 The docs recommend reusing the same client UUID between restarts of
 the client.
+
+=head2 rackspace_api_key
+
+(read-only optional string)
+
+API key for Rackspace authentication endpoints.
+
+=head2 rackspace_keystone_endpoint
+
+(read-only optional string)
+
+URL for Rackspace authentication endpoints.
+
+=head2 rackspace_username
+
+(read-only optional string)
+
+Your Rackspace API username.
 
 =head2 spore_client
 
@@ -259,8 +277,19 @@ successfully.  Once set, it will be sent in the "X-Auth-Token" header
 with each query.
 
 Rackspace invalidates the token after 24h, at which point all the
-queries will start returning 403 Forbidden.  Consider using a module
-such as L<Action::Retry> to re-authenticate.
+queries will start returning "401 Unauthorized".  Consider using
+C<do_request> to manage this for you.
+
+=head2 wants_auth
+
+(read-only boolean, defaults to false)
+
+If this attribute is set to true, you are indicating that the endpoint
+needs authentication.  This means that when a request wrapped with
+C<do_request> fails with "401 Unauthorized", the client will try
+(re-)authenticating with C<rackspace_authenticate>, using the values
+in C<rackspace_keystone_endpoint>, C<rackspace_username> and
+C<rackspace_api_key>.
 
 =head1 METHODS
 
@@ -289,6 +318,49 @@ or update the claim, delete a message, etc.
   my $response = $client->claim_messages(queue_name => 'potato');
   my $claim_href = $response->header('Location');
   $client->release_claim(__url__ => $claim_href);
+
+=head2 do_request
+
+  my $response = $client->do_request(sub { $client->list_queues(limit => 20) },
+                                     { retries => 2 },
+                                     @etc);
+
+This method can be used to manage token generation.  The first
+argument should be a coderef; it will be executing within a C<try { }>
+statement.  If the coderef throws a blessed exception of class
+L<Net::HTTP::Spore::Response> (or a subclass thereof), that response's
+status is "401 Unauthorized", and C<wants_auth> was set to a true
+value, C<rackspace_authenticate> will be called and the coderef will
+be retried.
+
+If the exception has another status code, it will be rethrown as-is,
+without retrying.  This generally leads to a somewhat cryptic "HTTP
+response: 403" exception, since L<Net::HTTP::Spore::Response> objects
+stringify to their status code.  If the status code was 599 (internal
+exception), the response's error message will be thrown instead.
+
+If the exception is not a L<Net::HTTP::Spore::Response> instance at
+all, it will be rethrown directly.
+
+Otherwise, the coderef's return value is returned.
+
+The second argument is a hashref of options.  Currently only "retries"
+is implemented:
+
+=over 4
+
+=item if "retries" is undefined or not provided, C<do_request> will
+retry indefinitely until successful
+
+=item if "retries" is 0, C<do_request> will not retry
+
+=item if "retries" is any other integer, C<do_request> will retry up
+to that many times.
+
+=back
+
+The coderef will be called with the original invocant of C<do_request>
+and the rest of the arguments of C<do_request> as parameters.
 
 =head2 rackspace_authenticate
 
