@@ -16,7 +16,7 @@ use Scalar::Util qw/blessed/;
 use Data::UUID;
 use Try::Tiny;
 
-our $VERSION = '0.006';
+our $VERSION = '0.007';
 
 has 'base_url' => (is => 'ro',
                    writer => '_set_base_url');
