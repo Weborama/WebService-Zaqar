@@ -9,7 +9,7 @@ my $build = Module::Build->new(
     configure_requires => {
         'Module::Build' => '0.36_14',
     },
-    test_requires => {
+    build_requires => {
         'Test::More' => 0,
         'Test::SetupTeardown' => 0,
     },
