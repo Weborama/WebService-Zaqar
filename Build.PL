@@ -18,6 +18,7 @@ my $build = Module::Build->new(
         'autodie' => 0,
         'Carp' => 0,
         'Data::UUID' => 0,
+        'File::ShareDir' => 0,
         'HTTP::Date' => 0,
         'HTTP::Request' => 0,
         'JSON' => 0,

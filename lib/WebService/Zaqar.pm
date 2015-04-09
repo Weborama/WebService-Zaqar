@@ -15,6 +15,7 @@ use List::Util qw/first/;
 use Scalar::Util qw/blessed/;
 use Data::UUID;
 use Try::Tiny;
+use File::ShareDir;
 
 our $VERSION = '0.008';
 
@@ -28,7 +29,7 @@ has 'spore_client' => (is => 'ro',
                        lazy => 1,
                        builder => '_build_spore_client');
 has 'spore_description_file' => (is => 'ro',
-                                 required => 1);
+                                 default => sub { File::ShareDir::dist_file('WebService-Zaqar', 'marconi.spore.json') });
 has 'client_uuid' => (is => 'ro',
                       lazy => 1,
                       builder => '_build_uuid');
