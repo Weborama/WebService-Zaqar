@@ -17,7 +17,7 @@ use Data::UUID;
 use Try::Tiny;
 use File::ShareDir;
 
-our $VERSION = '0.009';
+our $VERSION = '0.010';
 
 has 'base_url' => (is => 'ro',
                    writer => '_set_base_url');

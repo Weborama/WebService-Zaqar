@@ -1,5 +1,10 @@
 Revision history for WebService::Zaqar
 
+0.010 2015-07-09
+
+ - Remove a cyclic reference; fixes flushing messages during client
+   destruction.
+
 0.009 2015-04-09
 
  - Use a sane default for providing the SPORE spec file.
