@@ -12,7 +12,7 @@ use HTTP::Request;
 use JSON;
 use Net::HTTP::Spore;
 use List::Util qw/first/;
-use Scalar::Util qw/blessed/;
+use Scalar::Util qw/blessed weaken/;
 use Data::UUID;
 use Try::Tiny;
 use File::ShareDir;
@@ -56,12 +56,16 @@ sub _build_spore_client {
     $client->enable('+WebService::Zaqar::Middleware::Format::JSONSometimes');
     # set X-Auth-Token header to the Cloud Identity token, if
     # available (local instances don't use that, for instance)
+
+    my $twin = $self; # gonna close over this one
+    weaken $twin;
+
     $client->enable('+WebService::Zaqar::Middleware::Auth::DynamicHeader',
                     header_name => 'X-Auth-Token',
                     header_value_callback => sub {
                         # HTTP::Headers says, if the value of the
                         # header is undef, the field is removed
-                        return $self->has_token ? $self->token : undef
+                        return $twin ? $twin->has_token ? $twin->token : undef : undef
                     });
     # all requests should contain a Date header with an RFC 1123 date
     $client->enable('+WebService::Zaqar::Middleware::DateHeader');
