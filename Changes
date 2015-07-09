@@ -1,5 +1,11 @@
 Revision history for WebService::Zaqar
 
+0.009 2015-04-09
+
+ - Use a sane default for providing the SPORE spec file.
+ - Depend on a specific version of the Header middleware (fixes
+   conflicts in our Pinto instance)
+
 0.008 2014-11-20
 
  - De-munge exceptions.  It was a bad idea.
